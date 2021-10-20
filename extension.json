@@ -1,0 +1,30 @@
+{
+	"name": "UsersOnline",
+	"author": [
+		"Loren Maxwell"
+	],
+	"url": "",
+	"descriptionmsg": "usersonline-desc",
+	"license-name": "GPL-2.0-or-later",
+	"type": "other",
+	"requires": {
+		"MediaWiki": ">= 1.36.0"
+	},
+	"MessagesDirs": {
+		"UsersOnline": [
+			"i18n"
+		]
+	},
+	"AutoloadClasses": {
+		"UsersOnlineHooks": "includes/Hooks.php"
+	},
+	"Hooks": {
+		"BeforeInitialize": "UsersOnlineHooks::onBeforeInitialize",
+        "SkinTemplateNavigation::Universal": "UsersOnlineHooks::onSkinTemplateNavigation_Universal"
+    },
+	"config": {
+		"ShowUsersOnline": true,
+		"UsersOnlineTimeout": 3600
+	},
+	"manifest_version": 1
+}

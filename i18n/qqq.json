@@ -1,0 +1,9 @@
+{
+	"@metadata": {
+		"authors": [
+			"Loren Maxwell"
+		]
+	},
+	"usersonline": "Users Online",
+	"usersonline-desc": "Shows users online for use with a skin based on Mustache"
+}
