@@ -25,7 +25,7 @@ Configuration
 Mustache template JSON
 ---------------------
 JSON is returned in the following format:
-````
+```
 {
     "data-extension-portlets": {
 	"data-online": {
@@ -54,7 +54,7 @@ JSON is returned in the following format:
 	}
     }
 }
-````
+```
 Compatible skins
 ---------------------
 
