@@ -26,34 +26,34 @@ Mustache template JSON
 ---------------------
 JSON is returned in the following format:
 ````
-	{
-	    "data-extension-portlets": {
-		"data-online": {
-		    "id": "n-online",
-		    "text": "Online",
-		    "href": "\/w\/Main page",
-		    "title": "Online",
-		    "online": 0,
-		    "guests": 0,
-		    "members": {
-			"array-currently": [],
-			"array-recently": [
-			    {
-				"uo_user_id": "1",
-				"uo_lastLinkURL": "\/beta\/wiki\/index.php?title=Main_Page",
-				"uo_lastPageTitle": "Main Page",
-				"uo_start_session": "2021-10-21 00:37:32",
-				"uo_end_session": "2021-10-21 00:48:39",
-				"user_name": "Recent visitor",
-				"ago": "14 minutes, 50 seconds ago",
-				"offline_since": "14 minutes, 50 seconds ago",
-				"user_page": "\/beta\/wiki\/index.php?title=User:172.69.68.228"
-			    }
-			]
+{
+    "data-extension-portlets": {
+	"data-online": {
+	    "id": "n-online",
+	    "text": "Online",
+	    "href": "\/w\/Main page",
+	    "title": "Online",
+	    "online": 0,
+	    "guests": 0,
+	    "members": {
+		"array-currently": [],
+		"array-recently": [
+		    {
+			"uo_user_id": "1",
+			"uo_lastLinkURL": "\/beta\/wiki\/index.php?title=Main_Page",
+			"uo_lastPageTitle": "Main Page",
+			"uo_start_session": "2021-10-21 00:37:32",
+			"uo_end_session": "2021-10-21 00:48:39",
+			"user_name": "Recent visitor",
+			"ago": "14 minutes, 50 seconds ago",
+			"offline_since": "14 minutes, 50 seconds ago",
+			"user_page": "\/beta\/wiki\/index.php?title=User:172.69.68.228"
 		    }
-		}
+		]
 	    }
 	}
+    }
+}
 ````
 Compatible skins
 ---------------------
