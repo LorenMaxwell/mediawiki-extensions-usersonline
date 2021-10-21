@@ -19,6 +19,7 @@
 		"UsersOnlineHooks": "includes/Hooks.php"
 	},
 	"Hooks": {
+	    "LoadExtensionSchemaUpdates": "UsersOnlineHooks::onLoadExtensionSchemaUpdates",
 		"BeforeInitialize": "UsersOnlineHooks::onBeforeInitialize",
         "SkinTemplateNavigation::Universal": "UsersOnlineHooks::onSkinTemplateNavigation_Universal"
     },

@@ -82,7 +82,7 @@ class UsersOnlineHooks {
         $lb = MediaWikiServices::getInstance()->getDBLoadBalancer();
         $db = $lb->getConnectionRef( DB_PRIMARY  );
 
-		$db->delete( 'users_online', [ 'user_id' => 0, 'end_session < "' . $olddatetime . '"' ], __METHOD__ );
+		$db->delete( 'user_online', [ 'uo_user_id' => 0, 'uo_end_session < "' . $olddatetime . '"' ], __METHOD__ );
         
     }
 
@@ -95,11 +95,11 @@ class UsersOnlineHooks {
         $db = $lb->getConnectionRef( DB_REPLICA  );
 
 		$row = $db->selectRow(
-			'users_online',
+			'user_online',
 			'COUNT(*) AS cnt',
-			'user_id = 0 AND end_session >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 MINUTE)',
+			'uo_user_id = 0 AND uo_end_session >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 MINUTE)',
 			__METHOD__,
-			'GROUP BY ip_address'
+			'GROUP BY uo_ip_address'
 		);
 		$anons = (int)$row->cnt;
 
@@ -115,11 +115,11 @@ class UsersOnlineHooks {
         $db = $lb->getConnectionRef( DB_REPLICA  );
 
 		$row = $db->selectRow(
-			'users_online',
+			'user_online',
 			'COUNT(*) AS cnt',
-			'user_id != 0 AND end_session >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 MINUTE)',
+			'uo_user_id != 0 AND uo_end_session >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 MINUTE)',
 			__METHOD__,
-			'GROUP BY ip_address'
+			'GROUP BY uo_ip_address'
 		);
 		$users = (int)$row->cnt;
 		
@@ -140,46 +140,46 @@ class UsersOnlineHooks {
 		    ];
 
 		$currently = $db->select(
-        	[ 'users_online', 'user' ],
-        	[ 'wiki_users_online.user_id', 'wiki_users_online.lastLinkURL', 'wiki_users_online.lastPageTitle', 'wiki_users_online.start_session', 'wiki_users_online.end_session', 'wiki_user.user_name' ],
+        	[ 'user_online', 'user' ],
+        	[ 'uo_user_id', 'uo_lastLinkURL', 'uo_lastPageTitle', 'uo_start_session', 'uo_end_session', 'user_name' ],
         	[
-        		'wiki_users_online.user_id != 0 AND wiki_users_online.end_session >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 MINUTE)'
+        		'uo_user_id != 0 AND uo_end_session >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 MINUTE)'
         	],
         	__METHOD__,
-        	['ORDER BY' => 'wiki_users_online.end_session DESC'],
+        	['ORDER BY' => 'uo_end_session DESC'],
         	[
-        		'user' => [ 'INNER JOIN', [ 'wiki_user.user_id=wiki_users_online.user_id' ] ]
+        		'user' => [ 'INNER JOIN', [ 'user_id=uo_user_id' ] ]
         	]
 		);
 
         if ($currently->numRows() > 0) {
     		foreach ($currently as $r) {
     		    $user = $r;
-    		    $user->ago = UsersOnlineHooks::formatDateDiff($user->end_session);
-    		    $user->online_since = UsersOnlineHooks::formatDateDiff($user->start_session);
+    		    $user->ago = UsersOnlineHooks::formatDateDiff($user->uo_end_session);
+    		    $user->online_since = UsersOnlineHooks::formatDateDiff($user->uo_start_session);
     		    $user->user_page = MediaWikiServices::getInstance()->getUserFactory()->newFromId( (int)$user->user_id )->getUserPage()->getLocalURL();
     		    $users['array-currently'][] = (array) $user;
     		}
         }
 
 		$recently = $db->select(
-        	[ 'users_online', 'user' ],
-        	[ 'wiki_users_online.user_id', 'wiki_users_online.lastLinkURL', 'wiki_users_online.lastPageTitle', 'wiki_users_online.start_session', 'wiki_users_online.end_session', 'wiki_user.user_name' ],
+        	[ 'user_online', 'user' ],
+        	[ 'uo_user_id', 'uo_lastLinkURL', 'uo_lastPageTitle', 'uo_start_session', 'uo_end_session', 'user_name' ],
         	[
-        		'wiki_users_online.user_id != 0 AND wiki_users_online.end_session <= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 MINUTE) AND wiki_users_online.end_session >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 24 HOUR)',
+        		'uo_user_id != 0 AND uo_end_session <= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 MINUTE) AND uo_end_session >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 24 HOUR)',
         	],
         	__METHOD__,
-        	['ORDER BY' => 'wiki_users_online.end_session DESC'],
+        	['ORDER BY' => 'uo_end_session DESC'],
         	[
-        		'user' => [ 'INNER JOIN', [ 'wiki_user.user_id=wiki_users_online.user_id' ] ]
+        		'user' => [ 'INNER JOIN', [ 'user_id=uo_user_id' ] ]
         	]
 		);
 		
         if ($recently->numRows() > 0) {
     		foreach ($recently as $r) {
     		    $user = $r;
-    		    $user->ago = UsersOnlineHooks::formatDateDiff($user->end_session);
-    		    $user->offline_since = UsersOnlineHooks::formatDateDiff($user->end_session);
+    		    $user->ago = UsersOnlineHooks::formatDateDiff($user->uo_end_session);
+    		    $user->offline_since = UsersOnlineHooks::formatDateDiff($user->uo_end_session);
     		    $user->user_page = MediaWikiServices::getInstance()->getUserFactory()->newFromId( (int)$user->user_id )->getUserPage()->getLocalURL();
     		    $users['array-recently'][] = (array) $user;
     		}
@@ -188,6 +188,17 @@ class UsersOnlineHooks {
 		return $users;
 	}
 
+
+	/**
+	 * Create users online table
+	*/ 
+    public static function onLoadExtensionSchemaUpdates( DatabaseUpdater $updater ) {
+        
+        $file = __DIR__ . '/../sql/UsersOnline.sql';
+        $updater->addExtensionTable( 'user_online', $file );
+        
+    }
+        
 	/**
 	 * Update users online data
 	*/ 
@@ -212,42 +223,42 @@ class UsersOnlineHooks {
 
             // Get user's last session_id
     		$row = $db->selectRow(
-    			'users_online',
-    			['session_id', 'start_session', 'end_session', 'prev_end_session'],
-    			'user_id = '. $user->getId(),
+    			'user_online',
+    			['uo_session_id', 'uo_start_session', 'uo_end_session', 'uo_prev_end_session'],
+    			'uo_user_id = '. $user->getId(),
     			__METHOD__,
     			''
     		);
     		
-    		$last_session = $row->session_id;
+    		$last_session = $row->uo_session_id;
 		}
 		
 		$same_session = $last_session == $current_session;
 		
 		// row to insert to table
 		$row = [
-			'user_id' => $user->getId(),
-			'session_id' => $request->getSessionId()->getId(),
-			'ip_address' => $user->getName(),
-			'lastLinkURL' => $title->getLinkURL(),
-			'lastPageTitle' => $title->getText(),
-			'start_session' => $same_session ? $row->start_session : date("Y-m-d H:i:s"),
-			'end_session' => date("Y-m-d H:i:s"),
-			'prev_end_session' => $same_session ? $row->prev_end_session : $row->end_session
+			'uo_user_id' => $user->getId(),
+			'uo_session_id' => $request->getSessionId()->getId(),
+			'uo_ip_address' => $user->getName(),
+			'uo_lastLinkURL' => $title->getLinkURL(),
+			'uo_lastPageTitle' => $title->getText(),
+			'uo_start_session' => $same_session ? $row->uo_start_session : date("Y-m-d H:i:s"),
+			'uo_end_session' => date("Y-m-d H:i:s"),
+			'uo_prev_end_session' => $same_session ? $row->uo_prev_end_session : $row->uo_end_session
 		];
 		$method = __METHOD__;
 		$db->onTransactionIdle( function() use ( $db, $method, $row ) {
 			$db->upsert(
-				'users_online',
+				'user_online',
 				$row,
-				[ 'user_id', 'ip_address' ],
+				[ 'uo_user_id', 'uo_ip_address' ],
 				[
-				    'session_id' => $row['session_id'],
-				    'lastLinkURL' => $row['lastLinkURL'],
-				    'lastPageTitle' => $row['lastPageTitle'],
-				    'start_session' => $row['start_session'],
-				    'end_session' => $row['end_session'],
-				    'prev_end_session' => $row['prev_end_session']
+				    'uo_session_id' => $row['uo_session_id'],
+				    'uo_lastLinkURL' => $row['uo_lastLinkURL'],
+				    'uo_lastPageTitle' => $row['uo_lastPageTitle'],
+				    'uo_start_session' => $row['uo_start_session'],
+				    'uo_end_session' => $row['uo_end_session'],
+				    'uo_prev_end_session' => $row['uo_prev_end_session']
 				],
 				$method
 			);
