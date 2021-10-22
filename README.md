@@ -8,7 +8,7 @@ Installation
 
 1) Download and place files in a directory called UsersOnline in your extensions folder.
 2) Add the following code at the bottom of your LocalSettings.php: wfLoadExtension( 'UsersOnline' );
-3) Run the update script which will automatically create the necessary database tables that this extension needs.
+3) Run `php ../../maintenance/sql.php sql/UsersOnline.sql`
 4) Done – Navigate to Special:Version on your wiki to verify that the extension is successfully installed.
 
 Configuration
