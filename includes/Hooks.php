@@ -216,24 +216,19 @@ class UsersOnlineHooks {
         $lb = MediaWikiServices::getInstance()->getDBLoadBalancer();
         $db = $lb->getConnectionRef( DB_PRIMARY );
 
-        $current_session = $request->getSessionId()->getId();
-        
-	    $last_session = null;
 		if ($user->getId() != 0) {
 
             // Get user's last session_id
-    		$row = $db->selectRow(
+    		$last_session_entry = $db->selectRow(
     			'user_online',
     			['uo_session_id', 'uo_start_session', 'uo_end_session', 'uo_prev_end_session'],
     			'uo_user_id = '. $user->getId(),
     			__METHOD__,
     			''
     		);
-    		
-    		$last_session = $row->uo_session_id;
 		}
 		
-		$same_session = $last_session == $current_session;
+		$same_session = ($request->getSessionId()->getId() == ($last_session_entry->uo_session_id ?? null));
 		
 		// row to insert to table
 		$row = [
@@ -242,9 +237,9 @@ class UsersOnlineHooks {
 			'uo_ip_address' => $user->getName(),
 			'uo_lastLinkURL' => $title->getLinkURL(),
 			'uo_lastPageTitle' => $title->getText(),
-			'uo_start_session' => $same_session ? $row->uo_start_session : date("Y-m-d H:i:s"),
+			'uo_start_session' => $same_session ? $last_session_entry->uo_start_session ?? null : date("Y-m-d H:i:s"),
 			'uo_end_session' => date("Y-m-d H:i:s"),
-			'uo_prev_end_session' => $same_session ? $row->uo_prev_end_session : $row->uo_end_session
+			'uo_prev_end_session' => $same_session ? $last_session_entry->uo_prev_end_session ?? null  : $last_session_entry->uo_end_session ?? null
 		];
 		$method = __METHOD__;
 		$db->onTransactionIdle( function() use ( $db, $method, $row ) {
