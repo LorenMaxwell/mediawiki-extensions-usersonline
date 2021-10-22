@@ -221,7 +221,7 @@ class UsersOnlineHooks {
             // Get user's last session_id
     		$last_session_entry = $db->selectRow(
     			'user_online',
-    			['uo_session_id', 'uo_start_session', 'uo_end_session', 'uo_prev_end_session'],
+    			['uo_id', 'uo_session_id', 'uo_start_session', 'uo_end_session', 'uo_prev_end_session'],
     			'uo_user_id = '. $user->getId(),
     			__METHOD__,
     			''
@@ -232,6 +232,7 @@ class UsersOnlineHooks {
 		
 		// row to insert to table
 		$row = [
+			'uo_id' => $same_session ? $last_session_entry->uo_id ?? null : null,
 			'uo_user_id' => $user->getId(),
 			'uo_session_id' => $request->getSessionId()->getId(),
 			'uo_ip_address' => $user->getName(),
@@ -246,7 +247,7 @@ class UsersOnlineHooks {
 			$db->upsert(
 				'user_online',
 				$row,
-				[ 'uo_user_id', 'uo_ip_address' ],
+				[ 'uo_id' ],
 				[
 				    'uo_session_id' => $row['uo_session_id'],
 				    'uo_lastLinkURL' => $row['uo_lastLinkURL'],
